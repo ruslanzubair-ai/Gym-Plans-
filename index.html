@@ -26,7 +26,7 @@ button.on{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600
 .ch{display:flex;align-items:flex-end;gap:4px;height:90px}.ch i{flex:1;background:var(--ac);border-radius:3px 3px 0 0;min-height:3px}.ch i.z{background:var(--line)}
 .lg{padding:10px 16px;border-bottom:1px solid var(--line);font-size:14px}.lg:last-child{border:0}.lh{font-weight:600;font-size:13px;color:var(--ac);margin-bottom:4px}.ln{display:flex;justify-content:space-between;gap:8px;padding:2px 0}
 </style></head><body><main>
-<h1>Gym Plans <small style="font-size:12px;color:var(--muted)">v7</small></h1>
+<h1>Gym Plans <small style="font-size:12px;color:var(--muted)">v8</small></h1>
 <div class="row" id="nav"></div>
 <div id="vp"><div class="row" id="pl"></div><div class="row" id="wk"></div><div class="row" id="dy"></div>
 <div class="card"><div class="head"><div><h2 id="t"></h2><div class="mu" id="f"></div></div><span class="mu" id="p"></span></div><div class="bar"><i id="b"></i></div><div id="l"></div></div>
@@ -57,7 +57,7 @@ var top=Object.keys(ty).sort(function(a,b){return ty[b]-ty[a]}).slice(0,5);
 var h='<div class="g4"><div class="st"><b>'+wk+'</b>Workout days in the last 7 days</div><div class="st"><b>'+st+'</b>Day streak</div><div class="st"><b>'+ds.length+'</b>Total workout days</div><div class="st"><b>'+tot+'</b>Exercises logged</div></div>';
 h+='<div class="card"><div class="pad"><h2>Last 14 days</h2><div class="ch" style="margin-top:12px">'+days.map(function(c){return '<i class="'+(c?'':'z')+'" style="height:'+Math.round(c/mx*100)+'%"></i>'}).join("")+'</div><div class="mu" style="margin-top:6px">Bars show exercises logged per day</div></div></div>';
 h+='<div class="card"><div class="pad"><h2>Most logged</h2>'+(top.length?top.map(function(n){return '<div class="ln"><span>'+n+'</span><span class="mu">'+ty[n]+'x</span></div>'}).join(""):'<p class="mu">Tick exercises on the Plans tab to start your log.</p>')+'</div></div>';
-$("vd").innerHTML=h}
+h+='<div class="card"><div class="pad"><h2>Backup</h2><p class="mu" style="margin:6px 0 10px">Saves your log and ticks as text. Paste the text into Apple Notes. Restore from the same text.</p><div class="row"><button id="bs">Share backup</button><button id="bc">Copy backup</button></div><textarea id="bt" placeholder="Paste a backup here to restore" style="width:100%;min-height:70px;font:inherit;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px"></textarea><button class="reset" id="br">Restore from pasted backup</button><div class="mu" id="bm" style="margin-top:8px"></div></div></div>';$("vd").innerHTML=h;bk()}
 function logv(){var ds=Object.keys(LG).sort().reverse(),h="";
 if(!ds.length)h='<div class="card"><div class="pad mu">No workouts logged yet. Tick exercises on the Plans tab to log them.</div></div>';
 else{h='<button class="reset" style="margin-bottom:12px" id="cp">Copy log as text</button>';
@@ -66,6 +66,15 @@ h+='<div class="card"><div class="head"><h2>'+lab(d)+'</h2><span class="mu">'+cn
 Object.keys(g).forEach(function(gk){h+='<div class="lg"><div class="lh">'+gk+'</div>'+g[gk].map(function(e){return '<div class="ln"><span>'+e[3]+'</span><span class="mu">'+e[4]+'</span></div>'}).join("")+'</div>'});h+='</div>'})}
 $("vl").innerHTML=h;var b=$("cp");
 if(b)b.onclick=function(){var t=ds.map(function(d){return lab(d)+"\n"+Object.keys(LG[d]).map(function(k){var e=LG[d][k];return e[0]+" "+e[1]+" "+e[2]+": "+e[3]+" "+e[4]}).join("\n")}).join("\n\n");try{navigator.clipboard.writeText(t).then(function(){b.textContent="Copied"})}catch(e){}}}
+function btext(){var ds=Object.keys(LG).sort(),tot=0;ds.forEach(function(d){tot+=cnt(d)});
+var s="GYM BACKUP "+fd(0)+"\nWorkout days: "+ds.length+"\nExercises logged: "+tot+"\n\n";
+ds.reverse().forEach(function(d){s+=lab(d)+"\n"+Object.keys(LG[d]).map(function(k){var e=LG[d][k];return e[0]+" "+e[1]+" "+e[2]+": "+e[3]+" "+e[4]}).join("\n")+"\n\n"});
+return s+"BACKUP-DATA:"+JSON.stringify({log:LG,ticks:S})}
+function bk(){var m=$("bm");
+$("bc").onclick=function(){var t=btext();try{navigator.clipboard.writeText(t).then(function(){m.textContent="Copied. Paste into Apple Notes."},function(){m.textContent="Copy blocked. Use Share backup."})}catch(e){m.textContent="Copy blocked. Use Share backup."}};
+$("bs").onclick=function(){var t=btext();if(navigator.share){navigator.share({title:"Gym backup",text:t}).catch(function(){})}else{m.textContent="Share not available. Use Copy backup."}};
+$("br").onclick=function(){var t=$("bt").value.replace(/[\u201C\u201D]/g,'"'),i=t.indexOf("BACKUP-DATA:");if(i<0){m.textContent="No backup data found in that text.";return}
+try{var d=JSON.parse(t.slice(i+12).trim());if(!d.log||!d.ticks)throw 0;LG=d.log;S=d.ticks;sv();sl();dash();$("bm").textContent="Restored."}catch(e){m.textContent="Backup text is incomplete. Paste the whole note."}}}
 function render(){nav();var P=PL[pi];if(wi>=P.w.length)wi=0;
 btns("pl",PL.map(function(x){return x.n}),pi,function(i){pi=i;wi=0;di=0;render()});
 btns("wk",P.w.map(function(x,i){return "Week "+(i+1)}),wi,function(i){wi=i;di=0;render()});
